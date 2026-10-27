@@ -64,7 +64,25 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[test]'
 ```
 
-For native Windows Command Prompt, install Python 3.12, Git for Windows and
+For automatic prerequisite detection and installation on x64 Windows, run this
+in Command Prompt from the extracted project folder:
+
+```bat
+powershell -NoProfile -Command "Unblock-File .\scripts\bootstrap_windows.ps1"
+powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\bootstrap_windows.ps1
+```
+
+Add `-CheckOnly` to print detected tool paths without installing anything.
+The process-scoped execution policy does not change your permanent policy.
+The bootstrap reuses Python 3.12, Git and compatible Node 24 where detected.
+Missing Python/Git installers come from their official sources and must pass
+Authenticode verification. A missing compatible Node is installed as a local
+portable tool after SHA-256 verification against the official manifest. It then
+calls the Python installer below. Installers may display Windows permission prompts.
+The bootstrap does not install CUDA or change an existing global PyTorch environment;
+project CPU dependencies go in `.venv`. Windows runtime testing remains pending.
+
+For manual native Windows setup, install Python 3.12, Git for Windows and
 Node.js 24.15+ (24.x), then reopen Command Prompt and run:
 
 ```bat
