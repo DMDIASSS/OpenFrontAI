@@ -64,9 +64,19 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[test]'
 ```
 
-On Windows, the tested shell scripts run under WSL2. Native Python training is
-also possible with `.venv\Scripts\python.exe`; install Node and the optional
-upstream dependency separately for the real-engine backend. There is no knowledge
+For native Windows Command Prompt, install Python 3.12, Git for Windows and
+Node.js 24.15+ (24.x), then reopen Command Prompt and run:
+
+```bat
+py -3.12 scripts\setup_windows.py
+.venv\Scripts\python.exe -m pytest -q
+.venv\Scripts\python.exe -m openfront_ai.cli train --resume models/selfplay-latest.pt --updates 100 --out runs/continued
+```
+
+Use `.venv\Scripts\python.exe` in place of `.venv/bin/python` in the commands
+below. The native installer has prerequisite/unit checks; Windows execution has
+not been tested in this Linux cloud instance. WSL2 remains an alternative.
+There is no knowledge
 of your PC's existing Torch/CUDA installation in this project. To locate existing
 interpreters and inspect NVIDIA availability in PowerShell, use `py -0p`,
 `Get-Command python`, and `nvidia-smi`. Install a GPU PyTorch wheel using the
