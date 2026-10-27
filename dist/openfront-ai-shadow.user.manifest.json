@@ -1,0 +1,12 @@
+{
+  "source_sha256": "66a8e51cccf7c73f1796c07b9e0000ded5d126a9d2f02d2f4c5c924a58ff2c84",
+  "policy_sha256": "62e7a3d2cee2b54015e0398d5afc7c0abbdedbd8b4354d036d5297c311693a13",
+  "output_sha256": "ea18aa2979232910584b2c970348724e6e784b907718412b4f665aaeb1c787f9",
+  "mode": "shadow",
+  "hosts": [
+    "localhost",
+    "127.0.0.1"
+  ],
+  "unsupported_action_fallback": "original rules for the whole decision frame",
+  "browser_match_validation": "not performed by the exporter"
+}

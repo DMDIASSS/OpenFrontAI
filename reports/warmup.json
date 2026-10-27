@@ -1,0 +1,6 @@
+{
+  "stage": "behavior-cloning bootstrap, not self-play",
+  "teacher_frames": 2921,
+  "teacher_agreement": 0.8212940692901611,
+  "epochs": 12
+}

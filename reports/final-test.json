@@ -1,0 +1,27 @@
+{
+  "domain": "actual OpenFront engine, headless plains land-only adapter",
+  "config": {
+    "envs": 64,
+    "players": 4,
+    "size": 100,
+    "max_steps": 160,
+    "seed": 30001
+  },
+  "opponent": "heuristic",
+  "learner": "neural",
+  "action_selection": "greedy",
+  "completed_games": 64,
+  "outright_wins": 14,
+  "budget_limited_games": 13,
+  "learner_eliminated_games": 44,
+  "conquest_wins": 7,
+  "outright_win_rate": 0.21875,
+  "win_rate_95pct_wilson": [
+    0.13502197461349755,
+    0.3343301633077779
+  ],
+  "mean_win_credit": 0.21875,
+  "mean_land_share": 0.181190625,
+  "mean_episode_steps": 105.953125,
+  "elapsed_seconds": 11.339601555999252
+}

@@ -1,0 +1,22 @@
+{
+  "sim": {
+    "envs": 16,
+    "players": 4,
+    "size": 100,
+    "max_steps": 160,
+    "seed": 1
+  },
+  "training": {
+    "horizon": 32,
+    "epochs": 4,
+    "minibatch": 512,
+    "learning_rate": 0.0003,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "entropy": 0.015,
+    "clip": 0.2,
+    "hidden": 40,
+    "snapshot_every": 25,
+    "league_size": 8
+  }
+}
