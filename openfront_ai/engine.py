@@ -5,12 +5,26 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 
 import numpy as np
 
 from .sim import TerritorySim
 
 PROJECT = Path(__file__).resolve().parents[1]
+
+
+def find_node():
+    """Include the project-local Node installed by the Windows bootstrap."""
+    candidates = [shutil.which("node")]
+    candidates += sorted((PROJECT / ".tools/node").glob("*/node.exe"), reverse=True)
+    for executable in candidates:
+        if executable:
+            result = subprocess.run([str(executable), "--version"], capture_output=True, text=True)
+            parts = result.stdout.strip().lstrip("v").split(".")
+            if result.returncode == 0 and len(parts) == 3 and parts[0] == "24" and tuple(map(int, parts)) >= (24, 15, 0):
+                return str(executable)
+    raise RuntimeError("Node 24.15+ (24.x) not found. Run scripts/bootstrap_windows.ps1 on Windows or install Node 24.")
 
 
 class RealEngineSim:
@@ -27,9 +41,12 @@ class RealEngineSim:
         tsx = root / "node_modules/tsx/dist/cli.mjs"
         if not tsx.exists():
             raise FileNotFoundError("Run bash scripts/setup_engine.sh to install the pinned engine")
-        self.process = subprocess.Popen(["node", str(tsx), str(PROJECT / "scripts/engine_worker.mts")],
+        node = find_node()
+        child_env = os.environ.copy()
+        child_env["PATH"] = str(Path(node).parent) + os.pathsep + child_env.get("PATH", "")
+        self.process = subprocess.Popen([node, str(tsx), str(PROJECT / "scripts/engine_worker.mts")],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
-                                        encoding="utf-8", bufsize=1)
+                                        encoding="utf-8", bufsize=1, env=child_env)
         atexit.register(self.close)
         self._request({"op": "init", "config": asdict(config)})
 
@@ -52,6 +69,9 @@ class RealEngineSim:
 
     def observe(self):
         return self._observation
+
+    def snapshot(self):
+        return self._request({"op": "snapshot"})["snapshots"][0]
 
     def reset(self, indices=None):
         ix = np.arange(self.n) if indices is None else np.asarray(indices)

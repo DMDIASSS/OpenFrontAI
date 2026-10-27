@@ -105,6 +105,22 @@ and CPU game engines can be faster on CPU, so a GPU is optional.
 
 ## Train, resume, evaluate
 
+To watch a checkpoint play, record an offline browser replay:
+
+```bat
+.venv\Scripts\python.exe -m openfront_ai.cli watch --checkpoint models/selected.pt --games 3 --out runs/watch.html
+start "" "runs\watch.html"
+```
+
+Use `--checkpoint runs/continued/latest.pt` to watch your own trained checkpoint.
+The HTML works offline in a browser: blue is your bot; pause, step, change playback
+speed, drag the timeline, and select recorded matches. Ownership and player stats
+come from the actual engine for engine checkpoints. The map display is deliberately
+simple and does not use the game's full renderer. This records separate evaluation
+games with greedy decisions; it does not attach to an ongoing training process.
+On Linux use `.venv/bin/python` and open the resulting HTML normally. Node installed
+by the Windows bootstrap is detected automatically under `.tools/node`.
+
 Recommended first real-engine experiment (finite run):
 
 ```bash

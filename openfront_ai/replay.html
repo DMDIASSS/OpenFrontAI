@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenFrontAI Match Replay</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101722;color:#e7eef8}body{max-width:1200px;margin:auto;padding:24px}h1{margin:0;font-size:26px}p{color:#a9b9ce}.top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.badge{background:#203d53;color:#87d6ff;border-radius:20px;padding:6px 12px;font-size:13px}.layout{display:grid;grid-template-columns:minmax(280px,680px) minmax(260px,1fr);gap:24px;margin-top:20px}canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;border:1px solid #42516a;border-radius:8px;background:#1b2636}.panel{background:#192334;border-radius:12px;padding:18px}button,select{background:#273b56;color:#fff;border:1px solid #506381;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{width:100%;accent-color:#53b4ff}.controls{display:flex;gap:8px;align-items:center;margin:12px 0;flex-wrap:wrap}table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:9px 5px;border-bottom:1px solid #33435a}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.decision{font-size:14px;margin-top:15px;padding:10px;background:#101722;border-radius:6px}.muted{color:#9eb0c8;font-size:13px}#outcome{font-weight:600;color:#81d7b7}#hover{min-height:20px}.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}@media(max-width:760px){body{padding:12px}.layout{grid-template-columns:1fr}}
+</style>
+<div class="top"><h1>OpenFrontAI Match Replay</h1><span id="domain" class="badge"></span><select id="match" aria-label="Match"></select></div>
+<p id="description"></p>
+<div class="layout"><div><canvas id="map" width="100" height="100" aria-label="Territory ownership map"></canvas>
+<div class="legend" id="legend"></div><p id="hover" class="muted">Hover over the map to inspect ownership.</p>
+<div class="controls"><button id="restart">↺ Restart</button><button id="back">←</button><button id="play">▶ Play</button><button id="next">→</button><label>Speed <select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option></select></label></div>
+<input id="timeline" type="range" min="0" value="0" aria-label="Replay timeline"><div id="clock" class="muted"></div>
+</div><div class="panel"><h2>Match state</h2><div id="outcome"></div><table><thead><tr><th>Player</th><th>Land</th><th>Troops</th><th>Gold</th></tr></thead><tbody id="stats"></tbody></table><div id="decisions"></div><p class="muted">Each frame shows ownership after one decision interval. Decisions are requested actions; the engine controls execution and attrition. Frames with an ongoing attack may show “Wait”.</p><p class="muted">This is a recorded training match, not a live game. It uses a simple ownership display, not the full OpenFront renderer.</p></div></div>
+<script>
+const replay=/*REPLAY_DATA*/null;
+const $=id=>document.getElementById(id), colors=['#52b5ff','#ef6d7a','#f2c75c','#65d6a5'], neutral='#263448';
+const canvas=$('map'),ctx=canvas.getContext('2d');let matchIndex=0,index=0,playing=false,previous=0,owners=[];
+const current=()=>replay.matches[matchIndex], name=p=>p===0?'P0 · Your bot':`P${p} · ${replay.opponent}`;
+$('domain').textContent=replay.backend==='engine'?'Actual OpenFront engine':'Simplified surrogate';
+$('description').textContent=`Checkpoint: ${replay.checkpoint} · Seed: ${replay.seed} · Greedy policy vs ${replay.opponent} opponents. Blue is your bot.`;
+replay.matches.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`Match ${i+1}`;$('match').append(o)});
+$('legend').innerHTML=colors.map((c,p)=>`<span><span class="dot" style="background:${c}"></span>${p===0?'Your bot':`P${p}`}</span>`).join('')+`<span><span class="dot" style="background:${neutral}"></span>Neutral</span>`;
+function render(){
+ const m=current(),f=m.frames[index];canvas.width=f.width;canvas.height=f.height;owners=[];
+ for(let i=0;i<f.runs.length;i+=2)for(let n=0;n<f.runs[i+1];n++)owners.push(f.runs[i]);
+ const image=ctx.createImageData(f.width,f.height);
+ owners.forEach((p,i)=>{const c=p<0?neutral:colors[p];image.data[i*4]=parseInt(c.slice(1,3),16);image.data[i*4+1]=parseInt(c.slice(3,5),16);image.data[i*4+2]=parseInt(c.slice(5,7),16);image.data[i*4+3]=255});ctx.putImageData(image,0,0);
+ $('timeline').max=m.frames.length-1;$('timeline').value=index;
+ $('clock').textContent=`Frame ${index} / ${m.frames.length-1} · Decision ${f.step} · Engine ticks ${f.ticks}`;
+ const final=index===m.frames.length-1;$('outcome').textContent=final?`${m.outcome} · Score leader: P${m.scoreWinner}`:'Match in progress';
+ $('stats').innerHTML=f.players.map(p=>`<tr><td><span class="dot" style="background:${colors[p.id]}"></span>${p.id===0?'Your bot':`P${p.id}`}</td><td>${(100*p.land/(f.width*f.height)).toFixed(1)}%</td><td>${Math.round(p.troops).toLocaleString()}</td><td>${Math.round(p.gold).toLocaleString()}</td></tr>`).join('');
+ $('decisions').replaceChildren();f.actions.forEach((a,p)=>{const d=document.createElement('div');d.className='decision';d.style.borderLeft=`3px solid ${colors[p]}`;d.textContent=`${name(p)}: ${a}`;$('decisions').append(d)});
+ if(final)playing=false;$('play').textContent=playing?'Ⅱ Pause':'▶ Play';
+}
+function seek(i){index=Math.max(0,Math.min(current().frames.length-1,i));render()}
+$('play').onclick=()=>{if(index===current().frames.length-1)index=0;playing=!playing;previous=0;render()};
+$('restart').onclick=()=>{playing=false;seek(0)};$('back').onclick=()=>{playing=false;seek(index-1)};$('next').onclick=()=>{playing=false;seek(index+1)};
+$('timeline').oninput=e=>{playing=false;seek(Number(e.target.value))};$('match').onchange=e=>{playing=false;matchIndex=Number(e.target.value);seek(0)};
+canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect(),f=current().frames[index],x=Math.min(f.width-1,Math.max(0,Math.floor((e.clientX-r.left)/r.width*f.width))),y=Math.min(f.height-1,Math.max(0,Math.floor((e.clientY-r.top)/r.height*f.height)));const p=owners[y*f.width+x];$('hover').textContent=`Tile ${x}, ${y} · ${p<0?'Neutral':name(p)}`};
+document.addEventListener('keydown',e=>{if(['INPUT','SELECT'].includes(document.activeElement.tagName))return;if(e.code==='Space'){e.preventDefault();$('play').click()}else if(e.code==='ArrowRight')$('next').click();else if(e.code==='ArrowLeft')$('back').click()});
+function tick(t){if(playing&&t-previous>=200/Number($('speed').value)){previous=t;seek(index+1)}requestAnimationFrame(tick)}render();requestAnimationFrame(tick);
+</script></html>

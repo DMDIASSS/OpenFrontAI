@@ -95,3 +95,15 @@ The new project files are local and uncommitted; no push or publication occurred
 Reusable `install_script` and `start_skill` were saved to the environment draft.
 Review and save them in environment settings, then publish the environment if
 you want this prepared filesystem snapshot available to future cloud tasks.
+
+## Offline replay viewer update
+
+The `watch` command now records checkpoint-controlled matches to a standalone HTML
+file. Engine ownership pixels are checked against actual per-player tile counts.
+The real viewer JavaScript is tested in jsdom for canvas pixel output, statistics,
+playback, stepping, scrubbing, match switching and restart (canvas output captured
+as RGBA data). All 23 tests pass after this update. The cloud Chromium file-URL
+policy blocked its screenshot test; a full Windows browser run remains unverified.
+An actual two-match recording is included as `dist/example-match.html`.
+Node installed in the project-local Windows bootstrap directory is now detected
+automatically by the engine subprocess adapter.

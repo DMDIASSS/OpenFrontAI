@@ -18,6 +18,9 @@ openfront-ai = "openfront_ai.cli:main"
 [tool.setuptools.packages.find]
 include = ["openfront_ai*"]
 
+[tool.setuptools.package-data]
+openfront_ai = ["replay.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["engine: integration with the optional pinned OpenFront headless engine"]

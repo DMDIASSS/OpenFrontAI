@@ -62,6 +62,14 @@ def main():
     select.add_argument("--games", type=int, default=32)
     select.add_argument("--seed", type=int, default=10001)
     select.add_argument("--test-seed", type=int, default=20001)
+    watch = subs.add_parser("watch", help="Record matches to a self-contained offline HTML viewer")
+    watch.add_argument("--checkpoint", type=Path, required=True)
+    watch.add_argument("--out", type=Path, default=Path("runs/watch.html"))
+    watch.add_argument("--games", type=int, default=1)
+    watch.add_argument("--seed", type=int, default=50001)
+    watch.add_argument("--max-steps", type=int, default=160)
+    watch.add_argument("--opponent", choices=["heuristic", "random", "passive"], default="heuristic")
+    watch.add_argument("--backend", choices=["surrogate", "engine"])
     args = parser.parse_args()
     if args.threads < 1:
         parser.error("--threads must be positive")
@@ -125,6 +133,10 @@ def main():
     elif args.command == "select":
         report = select_policy(args.candidates, args.out, args.games, args.seed, args.test_seed)
         print(json.dumps({"selected_update": report["selected_update"], "held_out_test": report["held_out_test"]}, indent=2))
+    elif args.command == "watch":
+        from .watch import record
+        print(json.dumps(record(args.checkpoint, args.out, args.games, args.seed,
+                                args.max_steps, args.opponent, args.backend), indent=2))
 
 
 if __name__ == "__main__":

@@ -152,6 +152,16 @@ for await (const line of readline.createInterface({ input: process.stdin })) {
     } else if (message.op === 'step') {
       if (message.actions.length !== worlds.length) throw new Error('World count mismatch');
       result.transitions = worlds.map((w, i) => step(w, message.actions[i]));
+    } else if (message.op === 'snapshot') {
+      result.snapshots = worlds.map(w => ({
+        width: w.game.width(), height: w.game.height(), ticks: w.game.ticks(), step: w.step,
+        owner: Array.from({ length: w.game.width() * w.game.height() }, (_, tile) => {
+          const target = w.game.owner(tile);
+          return target.isPlayer() ? w.players.findIndex(p => p.id() === target.id()) : -1;
+        }),
+        players: w.players.map((p, i) => ({ id: i, land: p.numTilesOwned(), troops: p.troops(),
+          gold: Number(p.gold()), outgoing: p.outgoingAttacks().length })),
+      }));
     } else if (message.op === 'close') {
       break;
     } else throw new Error('Unknown operation');
